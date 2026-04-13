@@ -129,6 +129,26 @@ AS_IF([test "x$with_pulseaudio" != xno],
        AC_MSG_FAILURE([--with-pulseaudio was given, but pkg-config does not find libpulse-simple])
      fi])])
 
+AC_ARG_WITH([lv2],
+  [AS_HELP_STRING([--with-lv2], [build LV2 plugin @<:@default=check@:>@])],
+  [], [with_lv2=check])
+AS_IF([test "x$with_lv2" != xno],
+  [PKG_CHECK_MODULES([LV2], [lv2 >= 1.0.0],
+    [lv2_found=true
+     PKG_CHECK_MODULES([LV2_UI_DEPS], [x11 cairo cairo-xlib])],
+    [if test "x$with_lv2" != xcheck; then
+       AC_MSG_FAILURE([--with-lv2 was given, but pkg-config does not find lv2])
+     fi])])
+AM_CONDITIONAL([LV2], [test "x$lv2_found" = xtrue])
+
+dnl Installation directory for LV2 bundles (defaults to ${libdir}/lv2)
+AC_ARG_WITH([lv2dir],
+  [AS_HELP_STRING([--with-lv2dir=DIR],
+    [install LV2 bundles in DIR @<:@default=${libdir}/lv2@:>@])],
+  [lv2dir=${withval}],
+  [lv2dir='${libdir}/lv2'])
+AC_SUBST([lv2dir])
+
 AC_CONFIG_FILES([
 Makefile
 po/Makefile.in

@@ -119,6 +119,53 @@ lingot_CFLAGS = $(AM_CFLAGS) $(liblingot_rdep_cflags) $(GTK_CFLAGS) $(JSON_CFLAG
 lingot_LDADD  =              $(liblingot_rdep_libs)   $(GTK_LIBS)   $(JSON_LIBS)
 
 ######################################################################
+# 9 LV2 plugin
+
+if LV2
+# The LV2 bundle is installed under $(lv2dir)/lingot.lv2/.
+# We use a custom primary "bundle" so we can set bundledir freely.
+bundledir = $(lv2dir)/lingot.lv2
+
+# The plugin shared library is built as a self-contained libtool module:
+# the needed Lingot DSP sources are compiled directly into the .so so that
+# it has no runtime dependency on liblingot.so and can be installed by
+# simply copying the bundle directory.
+bundle_LTLIBRARIES = lingot_lv2.la
+
+lingot_lv2_la_SOURCES = \
+    lv2/lingot_lv2.c \
+    lv2/lingot-lv2-audio-stubs.c \
+    src/lingot-config.c \
+    src/lingot-config-scale.c \
+    src/lingot-defs-internal.c \
+    src/lingot-fft.c \
+    src/lingot-filter.c \
+    src/lingot-msg.c \
+    src/lingot-signal.c
+
+lingot_lv2_la_CFLAGS  = $(AM_CFLAGS) $(LV2_CFLAGS) $(LIBFFTW_CFLAGS) \
+                         -I$(srcdir)/src
+lingot_lv2_la_LDFLAGS = $(AM_LDFLAGS) -module -avoid-version -shared \
+                         -Wl,--no-undefined
+lingot_lv2_la_LIBADD  = $(LIBFFTW_LIBS) -lm
+
+# TTL metadata files (installed alongside the .so in the bundle dir)
+dist_bundle_DATA = \
+    lv2/lingot.lv2/manifest.ttl \
+    lv2/lingot.lv2/lingot.ttl
+
+# X11/Cairo UI (no GTK dependency — avoids version conflicts with the host)
+bundle_LTLIBRARIES += lingot_lv2_ui.la
+
+lingot_lv2_ui_la_SOURCES = lv2/lingot_lv2_ui.c
+lingot_lv2_ui_la_CFLAGS  = $(AM_CFLAGS) $(LV2_CFLAGS) $(LV2_UI_DEPS_CFLAGS) \
+                             -I$(srcdir)/src
+lingot_lv2_ui_la_LDFLAGS = $(AM_LDFLAGS) -module -avoid-version -shared \
+                             -Wl,--no-undefined
+lingot_lv2_ui_la_LIBADD  = $(LV2_UI_DEPS_LIBS) -lm
+endif
+
+######################################################################
 # 11 building documentation
 
 dist_man_MANS = lingot.1
@@ -205,6 +252,13 @@ MAINTAINERCLEANFILES = \
 EXTRA_DIST = \
   bootstrap \
   lingot.pc.in \
+  lv2/Makefile \
+  lv2/lingot_lv2.c \
+  lv2/lingot_lv2_ui.c \
+  lv2/lingot-lv2-audio-stubs.c \
+  lv2/lv2_test.c \
+  lv2/lingot.lv2/manifest.ttl \
+  lv2/lingot.lv2/lingot.ttl \
   test/resources/lingot-001.conf \
   test/resources/lingot-0_9_2b8.conf \
   test/resources/lingot-1_0_2b.conf \

@@ -82,6 +82,62 @@ sudo apt-get install \
     pkg-config
 ```
 
+LV2 plugin
+----------
+
+Lingot can also be built as an LV2 analyser plugin. The plugin exposes the
+detected pitch as control output ports (frequency in Hz, MIDI note number, and
+cents deviation) and comes with a lightweight X11/Cairo UI showing those values.
+
+### Additional dependencies
+
+```console
+sudo apt-get install lv2-dev libcairo2-dev libx11-dev
+```
+
+(`libcairo2-dev` and `libx11-dev` are already present on any system with
+`libgtk-3-dev`, so this is usually just `lv2-dev`.)
+
+### Building (development version)
+
+```console
+./bootstrap
+./configure
+make
+```
+
+`configure` detects LV2 automatically. To force it on or off:
+
+```console
+./configure --with-lv2      # require LV2, fail if not found
+./configure --without-lv2   # skip LV2 entirely
+```
+
+### Installing the bundle
+
+The easiest way to install just the LV2 bundle to your home directory
+(no root required) is to copy the four files directly after `make`:
+
+```console
+mkdir -p ~/.lv2/lingot.lv2
+cp .libs/lingot_lv2.so          ~/.lv2/lingot.lv2/
+cp .libs/lingot_lv2_ui.so       ~/.lv2/lingot.lv2/
+cp lv2/lingot.lv2/manifest.ttl  ~/.lv2/lingot.lv2/
+cp lv2/lingot.lv2/lingot.ttl    ~/.lv2/lingot.lv2/
+```
+
+The `.so` files are inside the hidden `.libs/` directory that libtool
+creates in the build tree.
+
+To install the full application **and** the LV2 bundle system-wide:
+
+```console
+sudo make install
+```
+
+After installation, restart your LV2 host (e.g. Ardour) and search for
+"Lingot Tuner".
+
 Beware that LINGOT ships an experimental shared library, whose interface could
 be subject to change. If you have trouble finding the library when launching the
 aplication, please consider reporting a bug, and try setting the library path
